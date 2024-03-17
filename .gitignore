@@ -1,0 +1,6 @@
+*.bin
+*.x
+build/
+*.elf
+*.sym
+.vscode

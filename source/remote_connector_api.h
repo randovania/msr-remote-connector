@@ -11,11 +11,8 @@
 
 extern s32 client_sock;
 extern uint8_t recv_buffer[SIZE_RECV_BUFFER];
-extern void handle_inventory(const char* lua_string, size_t string_size);
 extern void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool output_success);
-extern void handle_log_message(const char* log_message, size_t log_size);
-extern void handle_send_inventory(const char* log_message, size_t log_size);
-extern void handle_send_indices(const char* indices_message, size_t indices_size);
+extern void handle_generic_message(uint8_t packet_type, const char* message, size_t message_size);
 extern void create_remote_connector_thread(void);
 extern std::atomic_bool ready_for_game_thread;
 extern pthread_cond_t lua_done;
@@ -36,6 +33,7 @@ enum Packet {
   PACKET_REMOTE_LUA_EXEC = 3,
   PACKET_NEW_INVENTORY = 5,
   PACKET_COLLECTED_INDICES = 6,
+  PACKET_GAME_STATE = 8,
 };
 
 // Client's interest. e.g. logging is only forwarded to client if it was set in handshake

@@ -143,27 +143,11 @@ void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool out
 }
 
 
-// TODO: Refactor all of this copy paste code
-void handle_log_message(const char* log_message, size_t log_size) {
-    memset(send_buffer, PACKET_LOG_MESSAGE, 1);
-    memcpy(send_buffer + 1, &log_size, 4);
-    memcpy(send_buffer + 5, log_message, log_size);
-    send_packet(send_buffer, 5 + log_size);
-}
-
-
-void handle_send_inventory(const char* inventory_message, size_t inventory_size) {
-    memset(send_buffer, PACKET_NEW_INVENTORY, 1);
-    memcpy(send_buffer + 1, &inventory_size, 4);
-    memcpy(send_buffer + 5, inventory_message, inventory_size);
-    send_packet(send_buffer, 5 + inventory_size);
-}
-
-void handle_send_indices(const char* indices_message, size_t indices_size) {
-    memset(send_buffer, PACKET_COLLECTED_INDICES, 1);
-    memcpy(send_buffer + 1, &indices_size, 4);
-    memcpy(send_buffer + 5, indices_message, indices_size);
-    send_packet(send_buffer, 5 + indices_size);
+void handle_generic_message(uint8_t packet_type, const char* message, size_t message_size) {
+    memset(send_buffer, packet_type, 1);
+    memcpy(send_buffer + 1, &message_size, 4);
+    memcpy(send_buffer + 5, message, message_size);
+    send_packet(send_buffer, 5 + message_size);
 }
 
 

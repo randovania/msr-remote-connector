@@ -25,6 +25,7 @@ int remote_connector_init(void* lua_state);
 int remote_update(void* lua_state);
 int send_gamelog(void* lua_state);
 int send_indices(void* lua_state);
+int send_new_game_state(void* lua_state);
 
 static const luaL_Reg multiworld_lib[] = {
   {"Init", remote_connector_init},
@@ -32,6 +33,7 @@ static const luaL_Reg multiworld_lib[] = {
   {"SendLog", send_gamelog},
   {"SendInventory", send_inventory},
   {"SendIndices", send_indices},
+  {"SendNewGameState", send_new_game_state},
   {NULL, NULL}  
 };
 
@@ -108,22 +110,33 @@ int remote_update(void* lua_state) {
     return 0;
 }
 
+int get_lua_string_and_send(void* lua_state, uint8_t packet_type) {
+    size_t lua_string_size = 0;    // length of the lua string response (without \0)
+    const char* lua_string_message = lua_tolstring(lua_state, 1, &lua_string_size);
+    handle_generic_message(packet_type, lua_string_message, lua_string_size);
+    return 0;
+}
 
 /* Gets called by lua to send the inventory */
 int send_inventory(void* lua_state) {
-    // TODO: combine reading string to one function?
-    size_t inventory_size = 0;    // length of the lua string response (without \0)
-    const char* inventory_message = lua_tolstring(lua_state, 1, &inventory_size);
-    handle_send_inventory(inventory_message, inventory_size);
-    return 0;
+    if (client_subs.multiworld) {
+        return get_lua_string_and_send(lua_state, PACKET_NEW_INVENTORY);
+    }
 }
 
 
 /* Gets called by lua to send the indices of the already collected locations */
 int send_indices(void* lua_state) {
-    size_t indices_size = 0;    // length of the lua string response (without \0)
-    const char* indices_message = lua_tolstring(lua_state, 1, &indices_size);
-    handle_send_indices(indices_message, indices_size);
+    if (client_subs.multiworld) {
+        return get_lua_string_and_send(lua_state, PACKET_COLLECTED_INDICES);
+    }
+}
+
+/* Gets called by lua to send current game state (main menu or in game) */
+int send_new_game_state(void* lua_state) {
+    if (client_subs.multiworld) {
+        return get_lua_string_and_send(lua_state, PACKET_GAME_STATE);
+    }
     return 0;
 }
 
@@ -131,9 +144,7 @@ int send_indices(void* lua_state) {
 /* Gets called by lua to send a log message from Game.LogWarn */
 int send_gamelog(void* lua_state) {
     if (client_subs.logging) {
-        size_t log_size = 0;    // length of the lua string response (without \0)
-        const char* log_message = lua_tolstring(lua_state, 1, &log_size);
-        handle_log_message(log_message, log_size);
+        return get_lua_string_and_send(lua_state, PACKET_LOG_MESSAGE);
     }
     return 0;
 }

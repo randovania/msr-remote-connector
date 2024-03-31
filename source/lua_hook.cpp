@@ -28,6 +28,7 @@ int remote_update(void* lua_state);
 int send_gamelog(void* lua_state);
 int send_indices(void* lua_state);
 int send_new_game_state(void* lua_state);
+int send_recv_pickups(void* lua_state);
 int is_connected(void* lua_state);
 
 static const luaL_Reg multiworld_lib[] = {
@@ -36,6 +37,7 @@ static const luaL_Reg multiworld_lib[] = {
   {"SendLog", send_gamelog},
   {"SendInventory", send_inventory},
   {"SendIndices", send_indices},
+  {"SendReceivedPickups", send_recv_pickups},
   {"SendNewGameState", send_new_game_state},
   {"Connected", is_connected},
   {NULL, NULL}  
@@ -140,6 +142,14 @@ int send_indices(void* lua_state) {
 int send_new_game_state(void* lua_state) {
     if (client_subs.multiworld) {
         return get_lua_string_and_send(lua_state, PACKET_GAME_STATE);
+    }
+    return 0;
+}
+
+/* Gets called by lua to send current game state (main menu or in game) */
+int send_recv_pickups(void* lua_state) {
+    if (client_subs.multiworld) {
+        return get_lua_string_and_send(lua_state, PACKET_RECEIVED_PICKUPS);
     }
     return 0;
 }

@@ -151,9 +151,9 @@ void handle_generic_message(uint8_t packet_type, const char* message, size_t mes
 }
 
 
+// TODO: Add length checks
 void parse_client_packet() {
     if (ready_for_game_thread.load()) return;
-    if (recv_buffer[0] != PACKET_HANDSHAKE) ready_for_game_thread.store(true);
     switch (recv_buffer[0]) {
         case PACKET_HANDSHAKE:
             handle_handshake();

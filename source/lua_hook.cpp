@@ -14,6 +14,8 @@ void (*lua_pushstring) (void* lua_state, const char* s) = (void(*)(void*, const 
 int (*lua_pcall) (void* lua_state, int nargs, int nresults, int errfunc) = (int(*)(void*, int, int, int)) LUA_PCALL;
 int (*luaL_loadbuffer) (void* lua_state, const char* buff, size_t size, const char* name) = (int(*)(void*, const char*, size_t, const char*)) LUAL_LOADBUFFER;
 void (*lua_setfield) (void* lua_state, int idx, const char *k) = (void(*)(void*, int, const char*)) LUA_SETFIELD;
+void (*lua_pushboolean) (void* lua_state, int b) = (void(*)(void*, int)) LUA_PUSH_BOOLEAN;
+
 
 // lua defines
 #define lua_getglobal(L,s)lua_getfield(L, 0xffffd8ee, (s))
@@ -26,6 +28,7 @@ int remote_update(void* lua_state);
 int send_gamelog(void* lua_state);
 int send_indices(void* lua_state);
 int send_new_game_state(void* lua_state);
+int is_connected(void* lua_state);
 
 static const luaL_Reg multiworld_lib[] = {
   {"Init", remote_connector_init},
@@ -34,6 +37,7 @@ static const luaL_Reg multiworld_lib[] = {
   {"SendInventory", send_inventory},
   {"SendIndices", send_indices},
   {"SendNewGameState", send_new_game_state},
+  {"Connected", is_connected},
   {NULL, NULL}  
 };
 
@@ -147,6 +151,12 @@ int send_gamelog(void* lua_state) {
         return get_lua_string_and_send(lua_state, PACKET_LOG_MESSAGE);
     }
     return 0;
+}
+
+/* Gets called by lua to get current connection state */
+int is_connected(void* lua_state) {
+    lua_pushboolean(lua_state, client_sock != -1);
+    return 1;
 }
 
 

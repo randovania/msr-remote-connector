@@ -13,6 +13,7 @@
 #define LUA_PCALL 0x001a39ac
 #define LUAL_LOADBUFFER 0x00227138
 #define LUA_SETFIELD 0x0014234c
+#define LUA_PUSH_BOOLEAN 0x0017f2d8
 
 
 typedef int (*lua_CFunction) (void* lua_state);

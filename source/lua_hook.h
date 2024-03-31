@@ -11,7 +11,6 @@
 // should be lua_pushnumber but only takes one param??? FUN_0017f168
 #define LUA_PUSHSTRING 0x0017f188
 #define LUA_PCALL 0x001a39ac
-// TODO: Could be wrong!
 #define LUAL_LOADBUFFER 0x00227138
 #define LUA_SETFIELD 0x0014234c
 

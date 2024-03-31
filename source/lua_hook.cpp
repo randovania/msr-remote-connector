@@ -24,12 +24,14 @@ int send_inventory(void* lua_state);
 int remote_connector_init(void* lua_state);
 int remote_update(void* lua_state);
 int send_gamelog(void* lua_state);
+int send_indices(void* lua_state);
 
 static const luaL_Reg multiworld_lib[] = {
   {"Init", remote_connector_init},
   {"Update", remote_update},
   {"SendLog", send_gamelog},
   {"SendInventory", send_inventory},
+  {"SendIndices", send_indices},
   {NULL, NULL}  
 };
 
@@ -55,12 +57,12 @@ void multiworld_schedule_update(void* lua_state) {
 
 
 int remote_connector_init(void* lua_state) {
+    create_remote_connector_thread();
     multiworld_schedule_update(lua_state);
     return 0;
 }
 
 
-// TODO: Implement Remote Lua execution
 /* This functions is called perodically from the game and calls RemoteApi::ProcessCommand with a callback function */
 int remote_update(void* lua_state) {
     if (ready_for_game_thread.load()) {
@@ -83,7 +85,6 @@ int remote_update(void* lua_state) {
             int pcall_result = lua_pcall(lua_state, 0, 1, 0);
             // -2, +1 - call tostring with the result of that
             lua_call(lua_state, 1, 1);
-
             // +0
             lua_result = lua_tolstring(lua_state, 1, &result_size);
             
@@ -114,7 +115,15 @@ int send_inventory(void* lua_state) {
     size_t inventory_size = 0;    // length of the lua string response (without \0)
     const char* inventory_message = lua_tolstring(lua_state, 1, &inventory_size);
     handle_send_inventory(inventory_message, inventory_size);
-    lua_pop(lua_state, 1);
+    return 0;
+}
+
+
+/* Gets called by lua to send the indices of the already collected locations */
+int send_indices(void* lua_state) {
+    size_t indices_size = 0;    // length of the lua string response (without \0)
+    const char* indices_message = lua_tolstring(lua_state, 1, &indices_size);
+    handle_send_indices(indices_message, indices_size);
     return 0;
 }
 
@@ -125,14 +134,12 @@ int send_gamelog(void* lua_state) {
         size_t log_size = 0;    // length of the lua string response (without \0)
         const char* log_message = lua_tolstring(lua_state, 1, &log_size);
         handle_log_message(log_message, log_size);
-        lua_pop(lua_state, 1);
     }
     return 0;
 }
 
 
 void lua_hook(void* lua_state) {
-    create_remote_connector_thread();
     luaL_register(lua_state, "RL", multiworld_lib);
 
     lua_pushinteger(lua_state, 1);

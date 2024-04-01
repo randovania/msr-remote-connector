@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <arpa/inet.h>
 #include "remote_connector_api.h"
+#include <cstdlib>
 
 
 // aligned section for soc:u service
@@ -75,7 +76,7 @@ void listen_and_receive_function(void* argv) {
     clientlen = sizeof(client);
     memset(&client, 0, sizeof (client));
 
-    while (true) {
+    while (server_sock != -1) {
         pthread_mutex_lock(&mutex);
         client_subs.logging = false;
         client_subs.multiworld = false;
@@ -93,7 +94,9 @@ void listen_and_receive_function(void* argv) {
         client_sock = -1;
         pthread_mutex_unlock(&mutex);
     }
-
+    socExit();
+    srvExit();
+    svcExitThread();
     return;
 }
 
@@ -166,10 +169,17 @@ void parse_client_packet(int length) {
     return;
 }
 
+void soc_shutdown() {
+    if (client_sock != -1) close(client_sock);
+    if (server_sock != -1) close(server_sock);
+    server_sock = -1;
+    client_sock = -1;
+}
 
 void create_remote_connector_thread() {
     // init service api from libctru
     srvInit();
     recv_thread_stack = (u8*) malloc(SIZE_RECV_BUFFER);
 	svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)recv_thread_stack, 30, 1);
+    atexit(soc_shutdown);
 }

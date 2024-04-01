@@ -100,7 +100,6 @@ void listen_and_receive_function(void* argv) {
 
 void send_packet(uint8_t* buffer, int length) {
     if (client_sock != -1) {
-        request_number++;
         send(client_sock, buffer, length, 0);
     }
 }
@@ -109,7 +108,6 @@ void send_packet(uint8_t* buffer, int length) {
 void handle_handshake() {
     const char interest_byte = recv_buffer[1];
     client_subs.logging = interest_byte & 0x1;
-    // TODO: Use it 
     client_subs.multiworld = (interest_byte & 0x2) >> 1;
 
     memset(send_buffer, 0, SIZE_SEND_BUFFER);
@@ -118,20 +116,8 @@ void handle_handshake() {
     // request_number
     memset(send_buffer + 1, request_number, 1);
     send_packet(send_buffer, 2);
+    request_number++;
 }
-
-
-void handle_inventory(const char* lua_string, size_t string_size) {
-    memset(send_buffer, 0, SIZE_SEND_BUFFER);
-    // packet type
-    memset(send_buffer, PACKET_NEW_INVENTORY, 1);
-    // request_number
-    memset(send_buffer + 1, request_number, 1);
-    memcpy(send_buffer + 2, &string_size, 4);
-    memcpy(send_buffer + 6, lua_string, string_size);
-    send_packet(send_buffer, 6 + string_size);
-}
-
 
 void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool output_success) {
     memset(send_buffer, PACKET_REMOTE_LUA_EXEC, 1);
@@ -140,6 +126,7 @@ void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool out
     memcpy(send_buffer + 3, &result_size, 4);
     memcpy(send_buffer + 7, lua_result, result_size);
     send_packet(send_buffer, 7 + result_size);
+    request_number++;
 }
 
 

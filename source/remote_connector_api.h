@@ -17,16 +17,7 @@ extern void create_remote_connector_thread(void);
 extern std::atomic_bool ready_for_game_thread;
 extern pthread_cond_t lua_done;
 extern pthread_mutex_t mutex;
-/**
- * Packet structure:
- * PACKET_HANDSHAKE:
- * 0: PACKET_HANDSHAKE
- * 1: request_number
- * 2-5: payload length
- * 6-9: payload (SIZE_RECV_BUFFER)
- * 
- * TOOD: REST ;)
-*/
+
 enum Packet {
   PACKET_HANDSHAKE = 1,
   PACKET_LOG_MESSAGE = 2,
@@ -35,6 +26,7 @@ enum Packet {
   PACKET_COLLECTED_INDICES = 6,
   PACKET_RECEIVED_PICKUPS = 7,
   PACKET_GAME_STATE = 8,
+  PACKET_MALFORMED = 9
 };
 
 // Client's interest. e.g. logging is only forwarded to client if it was set in handshake

@@ -25,10 +25,9 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ClientSubscriptions client_subs;
 
-void parse_client_packet();
+void parse_client_packet(int length);
 
-// TODO: Replace while(true)
-void init_server() {
+int init_server() {
     int ret;
 
     struct sockaddr_in server;
@@ -41,27 +40,27 @@ void init_server() {
 
     // init soc services
     if ((ret = socInit(socServiceBuffer, 4096)) != 0) {
-        while(true){}
+        return -1;
     }
 
     // create server socket
     server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (server_sock < 0) {
-        while(true){}
+        return -1;
     }
 
     setsockopt((s32)&server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
     ret = bind(server_sock, (struct sockaddr *) &server, sizeof (server));
     if (ret != 0) {
-        while(true){}
+        return -1;
     }
 
     ret = listen(server_sock, 2);
     if (ret != 0) {
-        while(true){}
+        return -1;
     }
-
+    return 0;
 }
 
 void listen_and_receive_function(void* argv) {
@@ -70,7 +69,8 @@ void listen_and_receive_function(void* argv) {
     struct sockaddr_in client;
     memset(recv_buffer, 0, SIZE_RECV_BUFFER);
     
-    init_server();
+    // nothing we can do
+    if (init_server() != 0) return;
 
     clientlen = sizeof(client);
     memset(&client, 0, sizeof (client));
@@ -82,7 +82,7 @@ void listen_and_receive_function(void* argv) {
         client_sock = accept(server_sock, (struct sockaddr *)&client, &clientlen);
         request_number = 0;
         while ((ret = recv (client_sock, recv_buffer, SIZE_RECV_BUFFER, 0)) > 0) {
-            parse_client_packet();
+            parse_client_packet(ret);
 
             while (ready_for_game_thread.load()) {
 			    pthread_cond_wait(&lua_done, &mutex);
@@ -137,18 +137,29 @@ void handle_generic_message(uint8_t packet_type, const char* message, size_t mes
     send_packet(send_buffer, 5 + message_size);
 }
 
+void handle_malformed_packet(uint8_t packet_type, int received_bytes, int should_bytes) {
+    memset(send_buffer, PACKET_MALFORMED, 1);
+    memset(send_buffer + 1, packet_type, 1);
+    memcpy(send_buffer + 2, &received_bytes, 4);
+    memcpy(send_buffer + 6, &should_bytes, 4);
+    send_packet(send_buffer, 10);
+}
 
-// TODO: Add length checks
-void parse_client_packet() {
-    if (ready_for_game_thread.load()) return;
+void parse_client_packet(int length) {
+    if (ready_for_game_thread.load() || length == 0) return;
     switch (recv_buffer[0]) {
         case PACKET_HANDSHAKE:
-            handle_handshake();
+            if (length == 2) handle_handshake();
+            else handle_malformed_packet(PACKET_HANDSHAKE, length, 2);
         break;
         case PACKET_REMOTE_LUA_EXEC:
             // lua strings can be long, we may receive it in chunks
             // ^ true but a FIXME for now
-            ready_for_game_thread.store(true);
+            if (length < 5) handle_malformed_packet(PACKET_REMOTE_LUA_EXEC, length, 5);
+            int lua_string_length = 0;
+            memcpy(&lua_string_length, recv_buffer + 1, 4);
+            if (length != lua_string_length + 5) handle_malformed_packet(PACKET_REMOTE_LUA_EXEC, length, lua_string_length + 5);
+            else ready_for_game_thread.store(true);
         break;
     
     }

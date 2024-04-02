@@ -7,7 +7,6 @@ void (*luaL_register)(void *lua_state, const char *libname, const void *lua_reg)
 const char* (*lua_tolstring)(void *lua_state, int idx, size_t* len) = (const char* (*)(void*, int, size_t*)) LUAL_TOLSTRING_MEM;
 void (*lua_getfield) (void *lua_state, int idx, const char *k) = (void(*)(void*, int, const char*)) LUA_GETFIELD;
 void (*lua_settop) (void* lua_state, int idx) = (void(*)(void*, int)) LUA_POP;
-// LUA_API void lua_pushvalue (lua_State *L, int idx) {
 void (*lua_call) (void* lua_state, int nargs, int nresults) = (void(*)(void*, int, int)) LUA_CALL;
 void (*lua_pushinteger) (void* lua_state, int n) = (void(*)(void*, int)) LUA_PUSHINTEGER;
 void (*lua_pushstring) (void* lua_state, const char* s) = (void(*)(void*, const char*)) LUA_PUSHSTRING;
@@ -146,7 +145,7 @@ int send_new_game_state(void* lua_state) {
     return 0;
 }
 
-/* Gets called by lua to send current game state (main menu or in game) */
+/* Gets called by lua to send the current amount of received pickups */
 int send_recv_pickups(void* lua_state) {
     if (client_subs.multiworld) {
         return get_lua_string_and_send(lua_state, PACKET_RECEIVED_PICKUPS);

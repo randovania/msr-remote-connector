@@ -180,6 +180,6 @@ void create_remote_connector_thread() {
     // init service api from libctru
     srvInit();
     recv_thread_stack = (u8*) malloc(SIZE_RECV_BUFFER);
-	svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)recv_thread_stack, 30, 1);
+    svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)recv_thread_stack, 30, 1);
     atexit(soc_shutdown);
 }

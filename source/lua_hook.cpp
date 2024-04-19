@@ -127,6 +127,7 @@ int send_inventory(void* lua_state) {
     if (client_subs.multiworld) {
         return get_lua_string_and_send(lua_state, PACKET_NEW_INVENTORY);
     }
+    return 0;
 }
 
 
@@ -135,6 +136,7 @@ int send_indices(void* lua_state) {
     if (client_subs.multiworld) {
         return get_lua_string_and_send(lua_state, PACKET_COLLECTED_INDICES);
     }
+    return 0;
 }
 
 /* Gets called by lua to send current game state (main menu or in game) */

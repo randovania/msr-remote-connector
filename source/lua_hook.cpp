@@ -15,7 +15,6 @@ int (*luaL_loadbuffer) (void* lua_state, const char* buff, size_t size, const ch
 void (*lua_setfield) (void* lua_state, int idx, const char *k) = (void(*)(void*, int, const char*)) LUA_SETFIELD;
 void (*lua_pushboolean) (void* lua_state, int b) = (void(*)(void*, int)) LUA_PUSH_BOOLEAN;
 
-
 // lua defines
 #define lua_getglobal(L,s)lua_getfield(L, 0xffffd8ee, (s))
 #define lua_pop(L,n)		lua_settop(L, -(n)-1)
@@ -30,6 +29,7 @@ int send_new_game_state(void* lua_state);
 int send_recv_pickups(void* lua_state);
 int is_connected(void* lua_state);
 
+/* Lua functions -> C functions */
 static const luaL_Reg multiworld_lib[] = {
   {"Init", remote_connector_init},
   {"Update", remote_update},
@@ -43,6 +43,7 @@ static const luaL_Reg multiworld_lib[] = {
 };
 
 
+/* Schedules the next update on the next frame */
 void multiworld_schedule_update(void* lua_state) {
     // +1
     lua_getglobal(lua_state, "Game");
@@ -63,6 +64,7 @@ void multiworld_schedule_update(void* lua_state) {
 }
 
 
+/* Inits the remote connector. Called by RL.Update */
 int remote_connector_init(void* lua_state) {
     create_remote_connector_thread();
     multiworld_schedule_update(lua_state);
@@ -70,7 +72,7 @@ int remote_connector_init(void* lua_state) {
 }
 
 
-/* This functions is called perodically from the game and calls RemoteApi::ProcessCommand with a callback function */
+/* This functions is called perodically from the game and processes the remote lua code */
 int remote_update(void* lua_state) {
     if (ready_for_game_thread.load()) {
         pthread_mutex_lock(&mutex);
@@ -115,12 +117,15 @@ int remote_update(void* lua_state) {
     return 0;
 }
 
+
+/* Generic function which reads the lua string from the stack and send it as provided packet_type */
 int get_lua_string_and_send(void* lua_state, uint8_t packet_type) {
     size_t lua_string_size = 0;    // length of the lua string response (without \0)
     const char* lua_string_message = lua_tolstring(lua_state, 1, &lua_string_size);
     handle_generic_message(packet_type, lua_string_message, lua_string_size);
     return 0;
 }
+
 
 /* Gets called by lua to send the inventory */
 int send_inventory(void* lua_state) {
@@ -139,6 +144,7 @@ int send_indices(void* lua_state) {
     return 0;
 }
 
+
 /* Gets called by lua to send current game state (main menu or in game) */
 int send_new_game_state(void* lua_state) {
     if (client_subs.multiworld) {
@@ -146,6 +152,7 @@ int send_new_game_state(void* lua_state) {
     }
     return 0;
 }
+
 
 /* Gets called by lua to send the current amount of received pickups */
 int send_recv_pickups(void* lua_state) {
@@ -164,6 +171,7 @@ int send_gamelog(void* lua_state) {
     return 0;
 }
 
+
 /* Gets called by lua to get current connection state */
 int is_connected(void* lua_state) {
     lua_pushboolean(lua_state, client_sock != -1);
@@ -171,6 +179,7 @@ int is_connected(void* lua_state) {
 }
 
 
+/* The lua hook functions used by the hks file */
 void lua_hook(void* lua_state) {
     luaL_register(lua_state, "RL", multiworld_lib);
 

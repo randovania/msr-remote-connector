@@ -26,8 +26,12 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ClientSubscriptions client_subs;
 
+// forward declaration
 void parse_client_packet(int length);
 
+
+
+/* Inits the server by using socInit and create server socket by using standard Berkeley socket api calls */
 int init_server() {
     int ret;
 
@@ -64,6 +68,8 @@ int init_server() {
     return 0;
 }
 
+
+/* Listen and receive loop. Also the entrypoint of the thread */
 void listen_and_receive_function(void* argv) {
     int ret;
     socklen_t clientlen;
@@ -86,7 +92,7 @@ void listen_and_receive_function(void* argv) {
             parse_client_packet(ret);
 
             while (ready_for_game_thread.load()) {
-			    pthread_cond_wait(&lua_done, &mutex);
+                pthread_cond_wait(&lua_done, &mutex);
             }
             memset(recv_buffer, 0, SIZE_RECV_BUFFER);
         }
@@ -101,6 +107,7 @@ void listen_and_receive_function(void* argv) {
 }
 
 
+/* Sends the "buffer" via the socket, iff it is connected */
 void send_packet(uint8_t* buffer, int length) {
     if (client_sock != -1) {
         send(client_sock, buffer, length, 0);
@@ -108,6 +115,7 @@ void send_packet(uint8_t* buffer, int length) {
 }
 
 
+/* Handles handshake from the client */
 void handle_handshake() {
     const char interest_byte = recv_buffer[1];
     client_subs.logging = interest_byte & 0x1;
@@ -122,6 +130,8 @@ void handle_handshake() {
     request_number++;
 }
 
+
+/* Handles remote lua execution */
 void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool output_success) {
     memset(send_buffer, PACKET_REMOTE_LUA_EXEC, 1);
     memset(send_buffer + 1, request_number, 1);
@@ -133,6 +143,7 @@ void handle_remote_lua_exec(const char* lua_result, size_t result_size, bool out
 }
 
 
+/* Handles nearly all messages which structure is: packet_type, message_size, message */
 void handle_generic_message(uint8_t packet_type, const char* message, size_t message_size) {
     memset(send_buffer, packet_type, 1);
     memcpy(send_buffer + 1, &message_size, 4);
@@ -140,6 +151,8 @@ void handle_generic_message(uint8_t packet_type, const char* message, size_t mes
     send_packet(send_buffer, 5 + message_size);
 }
 
+
+/* Handles malformed packets */
 void handle_malformed_packet(uint8_t packet_type, int received_bytes, int should_bytes) {
     memset(send_buffer, PACKET_MALFORMED, 1);
     memset(send_buffer + 1, packet_type, 1);
@@ -148,6 +161,8 @@ void handle_malformed_packet(uint8_t packet_type, int received_bytes, int should
     send_packet(send_buffer, 10);
 }
 
+
+/* Parses packets from the client. Client actively only sends a handshake or a remote lua execution */
 void parse_client_packet(int length) {
     if (ready_for_game_thread.load() || length == 0) return;
     switch (recv_buffer[0]) {
@@ -169,6 +184,8 @@ void parse_client_packet(int length) {
     return;
 }
 
+
+/* Shutsdown the soc service. Doesn't do anything on citra because "atexit" isn't called */
 void soc_shutdown() {
     if (client_sock != -1) close(client_sock);
     if (server_sock != -1) close(server_sock);
@@ -176,6 +193,8 @@ void soc_shutdown() {
     client_sock = -1;
 }
 
+
+/* Creates the remote connector thread. Is called by lua via RL.Init -> "remote_connector_init" */
 void create_remote_connector_thread() {
     // init service api from libctru
     srvInit();

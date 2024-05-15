@@ -44,7 +44,7 @@ int init_server() {
     int opt = 1;
 
     // init soc services
-    if ((ret = socInit(socServiceBuffer, 4096)) != 0) {
+    if ((ret = socInit(socServiceBuffer, 4096*4)) != 0) {
         return -1;
     }
 
@@ -198,7 +198,8 @@ void soc_shutdown() {
 void create_remote_connector_thread() {
     // init service api from libctru
     srvInit();
-    recv_thread_stack = (u8*) malloc(SIZE_RECV_BUFFER);
-    svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)recv_thread_stack, 30, 1);
+    recv_thread_stack = (u8*) memalign(8, SIZE_RECV_BUFFER);
+    u8* top = recv_thread_stack + 4096;
+    svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)top, 30, 1);
     atexit(soc_shutdown);
 }

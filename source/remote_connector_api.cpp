@@ -1,12 +1,18 @@
+// For the record: This file once used nice blocking sockets but for whatever reason on Luma there is only one blocking
+// call allowed per socket descriptor. Got some Ryujinx flashbacks here.
+
 #include <string.h>
 #include <malloc.h>
 #include <arpa/inet.h>
 #include "remote_connector_api.h"
 #include <cstdlib>
+#include <fcntl.h>
+#include <errno.h>
 
+#define SOC_BUFFER_SIZE 0x30000
 
 // aligned section for soc:u service
-u32 __attribute__((section (".socServiceBufferSection"))) socServiceBuffer[4096];
+u8 __attribute__((section (".socServiceBufferSection"))) socServiceBuffer[SOC_BUFFER_SIZE];
 
 // no idea why the recv_thread_stack needs to be on the heap but otherwise
 // the socket functions just fails
@@ -44,7 +50,7 @@ int init_server() {
     int opt = 1;
 
     // init soc services
-    if ((ret = socInit(socServiceBuffer, 4096*4)) != 0) {
+    if ((ret = socInit((u32*)socServiceBuffer, SOC_BUFFER_SIZE)) != 0) {
         return -1;
     }
 
@@ -55,6 +61,7 @@ int init_server() {
     }
 
     setsockopt((s32)&server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    fcntl(server_sock, F_SETFL, fcntl(server_sock, F_GETFL, 0) | O_NONBLOCK);
 
     ret = bind(server_sock, (struct sockaddr *) &server, sizeof (server));
     if (ret != 0) {
@@ -81,14 +88,46 @@ void listen_and_receive_function(void* argv) {
 
     clientlen = sizeof(client);
     memset(&client, 0, sizeof (client));
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
 
     while (server_sock != -1) {
         pthread_mutex_lock(&mutex);
+
+        // init state
+        uint8_t run_client_loop = 1;
         client_subs.logging = false;
         client_subs.multiworld = false;
-        client_sock = accept(server_sock, (struct sockaddr *)&client, &clientlen);
         request_number = 0;
-        while ((ret = recv (client_sock, recv_buffer, SIZE_RECV_BUFFER, 0)) > 0) {
+
+        // wait for connections
+        client_sock = accept(server_sock, (struct sockaddr *)&client, &clientlen);
+        if (client_sock <= 0) {
+            svcSleepThread(1000 * 1000 * 10);
+            continue;
+        }
+
+        while (run_client_loop) {
+            ret = recv(client_sock, recv_buffer, SIZE_RECV_BUFFER, 0);
+            if (ret == -1) {
+                int error = errno;
+                switch (error) {
+                    case EWOULDBLOCK: 
+                    case EINTR: 
+                        svcSleepThread(1000 * 1000 * 10);
+                    break;
+                    default:
+                        run_client_loop = 0;
+                        continue;
+                }
+            } else if (ret == 0) {
+                run_client_loop = 0;
+                continue;
+            }
+
             parse_client_packet(ret);
 
             while (ready_for_game_thread.load()) {
@@ -110,7 +149,7 @@ void listen_and_receive_function(void* argv) {
 /* Sends the "buffer" via the socket, iff it is connected */
 void send_packet(uint8_t* buffer, int length) {
     if (client_sock != -1) {
-        send(client_sock, buffer, length, 0);
+        send(client_sock, buffer, length, MSG_DONTWAIT);
     }
 }
 
@@ -164,7 +203,7 @@ void handle_malformed_packet(uint8_t packet_type, int received_bytes, int should
 
 /* Parses packets from the client. Client actively only sends a handshake or a remote lua execution */
 void parse_client_packet(int length) {
-    if (ready_for_game_thread.load() || length == 0) return;
+    if (ready_for_game_thread.load() || length <= 0) return;
     switch (recv_buffer[0]) {
         case PACKET_HANDSHAKE:
             if (length == 2) handle_handshake();
@@ -172,11 +211,24 @@ void parse_client_packet(int length) {
         break;
         case PACKET_REMOTE_LUA_EXEC:
             // lua strings can be long, we may receive it in chunks
-            // ^ true but a FIXME for now
             if (length < 5) handle_malformed_packet(PACKET_REMOTE_LUA_EXEC, length, 5);
             int lua_string_length = 0;
             memcpy(&lua_string_length, recv_buffer + 1, 4);
-            if (length != lua_string_length + 5) handle_malformed_packet(PACKET_REMOTE_LUA_EXEC, length, lua_string_length + 5);
+
+            // receive as long as the packet is not completed or it shutdown with a recv value smaller than 0
+            int received_length = length;
+            int new_length;
+            uint8_t receive_loop = 5;
+            while (received_length != lua_string_length + 5 && receive_loop != 0) {
+                new_length = recv(client_sock, &recv_buffer[received_length], SIZE_RECV_BUFFER, 0);
+                if (new_length == -1) {
+                    receive_loop--;
+                    svcSleepThread(100);
+                    continue;
+                }
+                received_length += new_length;
+            }
+            if (received_length != lua_string_length + 5) handle_malformed_packet(PACKET_REMOTE_LUA_EXEC, length, lua_string_length + 5);
             else ready_for_game_thread.store(true);
         break;
     
@@ -184,14 +236,6 @@ void parse_client_packet(int length) {
     return;
 }
 
-
-/* Shutsdown the soc service. Doesn't do anything on citra because "atexit" isn't called */
-void soc_shutdown() {
-    if (client_sock != -1) close(client_sock);
-    if (server_sock != -1) close(server_sock);
-    server_sock = -1;
-    client_sock = -1;
-}
 
 
 /* Creates the remote connector thread. Is called by lua via RL.Init -> "remote_connector_init" */
@@ -201,5 +245,4 @@ void create_remote_connector_thread() {
     recv_thread_stack = (u8*) memalign(8, SIZE_RECV_BUFFER);
     u8* top = recv_thread_stack + 4096;
     svcCreateThread(&recv_thread, listen_and_receive_function, 0, (u32*)top, 30, 1);
-    atexit(soc_shutdown);
 }

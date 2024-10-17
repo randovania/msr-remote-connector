@@ -106,7 +106,7 @@ void listen_and_receive_function(void* argv) {
         // wait for connections
         client_sock = accept(server_sock, (struct sockaddr *)&client, &clientlen);
         if (client_sock <= 0) {
-            svcSleepThread(1000 * 1000 * 10);
+            svcSleepThread(1000 * 1000 * 100);
             continue;
         }
 
@@ -117,7 +117,7 @@ void listen_and_receive_function(void* argv) {
                 switch (error) {
                     case EWOULDBLOCK: 
                     case EINTR: 
-                        svcSleepThread(1000 * 1000 * 10);
+                        svcSleepThread(1000 * 1000 * 100);
                     break;
                     default:
                         run_client_loop = 0;
@@ -223,7 +223,7 @@ void parse_client_packet(int length) {
                 new_length = recv(client_sock, &recv_buffer[received_length], SIZE_RECV_BUFFER, 0);
                 if (new_length == -1) {
                     receive_loop--;
-                    svcSleepThread(100);
+                    svcSleepThread(1000 * 1000 * 10);
                     continue;
                 }
                 received_length += new_length;

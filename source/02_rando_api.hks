@@ -1,0 +1,11 @@
+ProjectileTopHook
+    type:   branch              # branch
+    link:   true                # branch with a bl instruction
+    addr:   0x002c3d70          # overwrite the call to CreatePlasmaBeamProjectiles for the upper projectile
+    func:   ProjectileAsm       # jump to our ProjectileAsm      
+
+ProjectileBottomHook:
+    type:   branch              # branch
+    link:   true                # branch with a bl instruction
+    addr:   0x002c3d3c          # overwrite the call to CreatePlasmaBeamProjectiles for the lower projectile
+    func:   ProjectileAsm       # jump to our ProjectileAsm      

@@ -1,7 +1,29 @@
 #include <string.h>
 #include "rando_api.h"
 
+#define HEAT 0x40000
+#define LAVA 0x200000
+#define FLEECH_SWARM 0x2000000
+
 int has_spazer = 0x1;
+int gravity_suit_damage_flags = FLEECH_SWARM | LAVA | HEAT;
+
+int change_suit_values(void* lua_state) {
+    int has_varia = lua_toboolean(lua_state, 1);
+    int has_gravity = lua_toboolean(lua_state, 2);
+    float* tun_dmg_reduction_gravity = (float*) 0x0079b1b0;
+
+    if (has_varia && has_gravity) {
+      gravity_suit_damage_flags = FLEECH_SWARM | LAVA | HEAT;
+      *tun_dmg_reduction_gravity = 0.5;
+    } else if (!has_varia && has_gravity) {
+      gravity_suit_damage_flags = FLEECH_SWARM;
+      *tun_dmg_reduction_gravity = 0.75;
+    }
+    // only varia doesn't matter because we only change gravity suit values
+
+    return 0;
+}
 
 int change_beams(void* lua_state) {
     // game creates only the highest projectiles. no need to change wave.
@@ -49,6 +71,8 @@ int change_beams(void* lua_state) {
 
 /* Lua functions -> C functions */
 const luaL_Reg rando_api_lib[] = {
+    // ChangeSuitValues(has_varia, has_gravity) e.g. RandoApi.ChangeSuitValues(false, true)
+    {"ChangeSuitValues", change_suit_values}, 
     // ChangeBeams(hasWave, hasSpazer, hasPlasma, dmgSpazer, dmgPlasma, dmgPlasmaWave, dmgPlasmaSpazer)
     {"ChangeBeams", change_beams}, 
     {NULL, NULL}  

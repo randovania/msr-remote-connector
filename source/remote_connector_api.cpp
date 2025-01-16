@@ -35,10 +35,19 @@ struct ClientSubscriptions client_subs;
 // forward declaration
 void parse_client_packet(int length);
 
+void sleep_ten_seconds() {
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+    svcSleepThread(1000 * 1000 * 1000 * 2);
+}
 
-
-/* Inits the server by using socInit and create server socket by using standard Berkeley socket api calls */
-int init_server() {
+/**
+ * Inits the server by using socInit and creates server socket by using standard Berkeley socket api calls 
+ * Was changed to busy wait error handling until it works (to not crash on Luma with disabled WiFi)
+ */
+void init_server() {
     int ret;
 
     struct sockaddr_in server;
@@ -50,29 +59,25 @@ int init_server() {
     int opt = 1;
 
     // init soc services
-    if ((ret = socInit((u32*)socServiceBuffer, SOC_BUFFER_SIZE)) != 0) {
-        return -1;
+    while ((ret = socInit((u32*)socServiceBuffer, SOC_BUFFER_SIZE)) != 0) {
+        sleep_ten_seconds();
     }
 
     // create server socket
-    server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (server_sock < 0) {
-        return -1;
+    while ((server_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
+        sleep_ten_seconds();
     }
 
     setsockopt((s32)&server_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     fcntl(server_sock, F_SETFL, fcntl(server_sock, F_GETFL, 0) | O_NONBLOCK);
 
-    ret = bind(server_sock, (struct sockaddr *) &server, sizeof (server));
-    if (ret != 0) {
-        return -1;
+    while ((ret = bind(server_sock, (struct sockaddr *) &server, sizeof (server))) != 0) {
+        sleep_ten_seconds();
     }
 
-    ret = listen(server_sock, 2);
-    if (ret != 0) {
-        return -1;
+    while ((ret = listen(server_sock, 2)) != 0) {
+        sleep_ten_seconds();
     }
-    return 0;
 }
 
 
@@ -83,16 +88,11 @@ void listen_and_receive_function(void* argv) {
     struct sockaddr_in client;
     memset(recv_buffer, 0, SIZE_RECV_BUFFER);
     
-    // nothing we can do
-    if (init_server() != 0) return;
+    init_server();
 
     clientlen = sizeof(client);
     memset(&client, 0, sizeof (client));
-    svcSleepThread(1000 * 1000 * 1000 * 2);
-    svcSleepThread(1000 * 1000 * 1000 * 2);
-    svcSleepThread(1000 * 1000 * 1000 * 2);
-    svcSleepThread(1000 * 1000 * 1000 * 2);
-    svcSleepThread(1000 * 1000 * 1000 * 2);
+    sleep_ten_seconds();
 
     while (server_sock != -1) {
         pthread_mutex_lock(&mutex);

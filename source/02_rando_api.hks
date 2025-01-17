@@ -1,4 +1,4 @@
-ProjectileTopHook
+ProjectileTopHook:
     type:   branch              # branch
     link:   true                # branch with a bl instruction
     addr:   0x002c3d70          # overwrite the call to CreatePlasmaBeamProjectiles for the upper projectile

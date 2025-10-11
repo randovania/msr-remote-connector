@@ -14,6 +14,7 @@ int send_indices(void* lua_state);
 int send_new_game_state(void* lua_state);
 int send_recv_pickups(void* lua_state);
 int is_connected(void* lua_state);
+int send_game_completed(void* lua_state);
 
 /* Lua functions -> C functions */
 static const luaL_Reg multiworld_lib[] = {
@@ -25,6 +26,7 @@ static const luaL_Reg multiworld_lib[] = {
     {"SendReceivedPickups", send_recv_pickups},
     {"SendNewGameState", send_new_game_state},
     {"Connected", is_connected},
+    {"SendGameCompleted", send_game_completed},
     {NULL, NULL}  
 };
 
@@ -162,6 +164,15 @@ int send_gamelog(void* lua_state) {
 int is_connected(void* lua_state) {
     lua_pushboolean(lua_state, client_sock != -1);
     return 1;
+}
+
+
+/* Gets called by lua to send whether a game has been beaten since the last reboot */
+int send_game_completed(void* lua_state) {
+    if (client_subs.multiworld) {
+        return get_lua_string_and_send(lua_state, PACKET_GAME_COMPLETED);
+    }
+    return 0;
 }
 
 

@@ -26,7 +26,8 @@ enum Packet {
     PACKET_COLLECTED_INDICES = 6,
     PACKET_RECEIVED_PICKUPS = 7,
     PACKET_GAME_STATE = 8,
-    PACKET_MALFORMED = 9
+    PACKET_MALFORMED = 9,
+    PACKET_GAME_COMPLETED = 10,
 };
 
 // Client's interest. e.g. logging is only forwarded to client if it was set in handshake

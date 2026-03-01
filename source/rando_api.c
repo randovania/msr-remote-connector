@@ -1,5 +1,6 @@
 #include <string.h>
 #include "rando_api.h"
+#include "activate_teleporter.h"
 
 #define HEAT 0x40000
 #define LAVA 0x200000
@@ -68,6 +69,13 @@ int change_beams(void* lua_state) {
     return 0;
 }
 
+int activate_teleporter_lua_wrapper(void* lua_state) {
+    size_t lua_string_size = 0;    // length of the lua string response (without \0)
+    const char* teleportername = lua_tolstring(lua_state, 1, &lua_string_size);
+    activate_teleporter(teleportername);
+
+    return 0;
+}
 
 /* Lua functions -> C functions */
 const luaL_Reg rando_api_lib[] = {
@@ -75,5 +83,6 @@ const luaL_Reg rando_api_lib[] = {
     {"ChangeSuitValues", change_suit_values}, 
     // ChangeBeams(hasWave, hasSpazer, hasPlasma, dmgSpazer, dmgPlasma, dmgPlasmaWave, dmgPlasmaSpazer)
     {"ChangeBeams", change_beams}, 
+    {"ActivateTeleporter", activate_teleporter_lua_wrapper}, 
     {NULL, NULL}  
 };

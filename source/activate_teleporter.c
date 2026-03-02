@@ -2,31 +2,46 @@
 #include <string.h>
 
 /*  Teleporter lookup table (name → area, minimap cell coordinates). */
+/** 
+* TODO: Wrong coordinates for teleporters in sub areas. They are definetly part of the minimap you get by using
+* the section string but they have an offset to the main area and I cannot find the source. Maybe just brute force the
+* the few subareas to determine the offset.
+* Coordinates are taken from the Bmsmsd
+* RandoApi.ActivateTeleporter("LE_Teleporter_02_01")
+* RandoApi.ActivateTeleporter("LE_Teleporter_02_04")
+* RandoApi.ActivateTeleporter("LE_Teleporter_03_01")
+* RandoApi.ActivateTeleporter("LE_Teleporter_03B_001")
+* RandoApi.ActivateTeleporter("LE_Teleporter_03B_002")
+* RandoApi.ActivateTeleporter("LE_Teleporter_05_01")
+* RandoApi.ActivateTeleporter("LE_Teleporter_06C_001")
+* RandoApi.ActivateTeleporter("LE_Teleporter_06B_001")
+*/ 
+
 static const TeleporterEntry TELEPORTER_TABLE[] = {
-    { "LE_Teleporter_00_01",   "s000_surface",  20, 30 },
-    { "LE_Teleporter_00b_01",  "s000_surface",  10, 10 },
-    { "LE_Teleporter_01_01",   "s010_area1",    20, 20 },
-    { "LE_Teleporter_02_01",   "s028_area2c",   -1, -1 },
-    { "LE_Teleporter_02_02",   "s020_area2",    -1, -1 },
-    { "LE_Teleporter_02_03",   "s020_area2",    -1, -1 },
-    { "LE_Teleporter_02_04",   "s025_area2b",   -1, -1 },
-    { "LE_Teleporter_03A_001", "s030_area3",    -1, -1 },
-    { "LE_Teleporter_03A_002", "s030_area3",    -1, -1 },
-    { "LE_Teleporter_03_01",   "s036_area3c",   -1, -1 },
-    { "LE_Teleporter_03B_001", "s033_area3b",   -1, -1 },
-    { "LE_Teleporter_03B_002", "s033_area3b",   -1, -1 },
-    { "LE_Teleporter_04_01",   "s040_area4",    -1, -1 },
-    { "LE_Teleporter_05_01",   "s050_area5",    -1, -1 },
-    { "LE_Teleporter_06A_001", "s060_area6",    -1, -1 },
-    { "LE_Teleporter_06C_001", "s067_area6c",   -1, -1 },
-    { "LE_Teleporter_06B_001", "s065_area6b",   -1, -1 },
-    { "LE_Teleporter_06A_002", "s060_area6",    -1, -1 },
-    { "LE_Teleporter_07_01",   "s070_area7",    -1, -1 },
-    { "LE_Teleporter_07_02",   "s070_area7",    -1, -1 },
-    { "LE_Teleporter_09_01",   "s090_area9",    -1, -1 },
-    { "LE_Teleporter_09_02",   "s090_area9",    -1, -1 },
-    { "LE_Teleporter_10_01",   "s100_area10",   -1, -1 },
-    { "LE_Teleporter_10_02",   "s100_area10",   -1, -1 },
+    { "LE_Teleporter_00_01",   "s000_surface",  65, 7 },
+    { "LE_Teleporter_00b_01",  "s000_surface",  23, 23 },
+    { "LE_Teleporter_01_01",   "s010_area1",    38, 17 },
+    { "LE_Teleporter_02_01",   "s028_area2c",   18,  11 },
+    { "LE_Teleporter_02_02",   "s020_area2",    25,  20 },
+    { "LE_Teleporter_02_03",   "s020_area2",    19,   7 },
+    { "LE_Teleporter_02_04",   "s025_area2b",   24,  10 },
+    { "LE_Teleporter_03A_001", "s030_area3",    29,  38 },
+    { "LE_Teleporter_03A_002", "s030_area3",    49,  36 },
+    { "LE_Teleporter_03_01",   "s036_area3c",   12,  32 },
+    { "LE_Teleporter_03B_001", "s033_area3b",   16,  44 },
+    { "LE_Teleporter_03B_002", "s033_area3b",   26,  35 },
+    { "LE_Teleporter_04_01",   "s040_area4",    19,  12 },
+    { "LE_Teleporter_05_01",   "s050_area5",    18,  10 },
+    { "LE_Teleporter_06A_001", "s060_area6",    46,  12 },
+    { "LE_Teleporter_06C_001", "s067_area6c",   32,  10 },
+    { "LE_Teleporter_06B_001", "s065_area6b",   11,  17 },
+    { "LE_Teleporter_06A_002", "s060_area6",    23,  18 },
+    { "LE_Teleporter_07_01",   "s070_area7",    25,   7 },
+    { "LE_Teleporter_07_02",   "s070_area7",    23,  20 },
+    { "LE_Teleporter_09_01",   "s090_area9",    19,  14 },
+    { "LE_Teleporter_09_02",   "s090_area9",    31,  16 },
+    { "LE_Teleporter_10_01",   "s100_area10",   13,  36 },
+    { "LE_Teleporter_10_02",   "s100_area10",   11,  15 },
 };
 #define TELEPORTER_COUNT ((int)(sizeof(TELEPORTER_TABLE) / sizeof(TELEPORTER_TABLE[0])))
 
@@ -48,8 +63,8 @@ static const AreaSectionEntry AREA_SECTION_TABLE[] = {
     { "s030_area3",    "s030_area3",    "s030_area3|s033_area3b|s036_area3c"  },
     { "s033_area3b",   "s030_area3",    "s030_area3|s033_area3b|s036_area3c"  },
     { "s036_area3c",   "s030_area3",    "s030_area3|s033_area3b|s036_area3c"  },
-    { "s040_area4",    "s040_area4",    "s040_area4"                          },
-    { "s050_area5",    "s050_area5",    "s050_area5"                          },
+    { "s040_area4",    "s040_area4",    "s040_area4|s050_area5"               },
+    { "s050_area5",    "s040_area4",    "s040_area4|s050_area5"               },
     { "s060_area6",    "s060_area6",    "s060_area6|s065_area6b|s067_area6c"  },
     { "s065_area6b",   "s060_area6",    "s060_area6|s065_area6b|s067_area6c"  },
     { "s067_area6c",   "s060_area6",    "s060_area6|s065_area6b|s067_area6c"  },
@@ -138,12 +153,26 @@ void mark_area_discovered(const char* sub_area_name) {
     trash_tstring(&flag_str);
 }
 
+/* Find a CMinimapScenario by section CRC.
+ *
+ * The outer FirstWrapper chain has ONE entry per section identified by CRC(sectionStr).
+ * For combined sections (e.g. "s020_area2|s025_area2b|s028_area2c") all sub-areas share
+ * one merged CMinimapScenario — there is no inner sub-area chain.  Cell coordinates in
+ * TELEPORTER_TABLE must therefore be in the combined section grid's coordinate space. */
+static CMinimapScenario* find_scenario(CMinimap* minimap, uint32_t section_crc) {
+    for (MinimapScenarioWrapper* w = minimap->FirstWrapper; w; w = w->Next) {
+        CMinimapScenario* s = w->Scenario;
+        if (s && s->Info->Current->CRC == section_crc) return s;
+    }
+    return NULL;
+}
+
 /* --------------------------------------------------------------------------
  * Mark the specific teleporter's minimap cell
  *
  * Walks the loaded MinimapScenarioWrapper chain, matches the scenario by CRC,
  * then calls mark_cell + render_cell_bg + serialize_cells for cell (cellX, cellY).
- * cellX/cellY must be filled in TELEPORTER_TABLE; returns early if -1.
+ * cellX/cellY must be filled in TELEPORTER_TABLE
  * -------------------------------------------------------------------------- */
 void mark_teleporter_cell(const char* teleporter_name) {
     const TeleporterEntry* tp = NULL;
@@ -153,7 +182,6 @@ void mark_teleporter_cell(const char* teleporter_name) {
             break;
         }
     }
-    if (!tp || tp->cellX < 0 || tp->cellY < 0) return;
 
     const AreaSectionEntry* sec = NULL;
     for (int i = 0; i < AREA_SECTION_COUNT; i++) {
@@ -164,31 +192,21 @@ void mark_teleporter_cell(const char* teleporter_name) {
     }
     if (!sec) return;
 
-    uint32_t     target_crc = crc32(sec->sectionStr, (int)strlen(sec->sectionStr), 0xFFFFFFFF);
-    GameManager* gm         = *GAMEMANAGER_PPTR;
-    CMinimap*    minimap    = get_minimap(gm);
+    GameManager* gm      = *GAMEMANAGER_PPTR;
+    CMinimap*    minimap = get_minimap(gm);
     if (!minimap) return;
 
-    for (MinimapScenarioWrapper* w = minimap->FirstWrapper; w; w = w->Next) {
-        CMinimapScenario* scenario = w->Scenario;
-        if (!scenario) continue;
+    uint32_t section_crc = crc32(sec->sectionStr, (int)strlen(sec->sectionStr), 0xFFFFFFFF);
+    CMinimapScenario* scenario = find_scenario(minimap, section_crc);
+    if (!scenario) return;
 
-        MapInfo* info = scenario->Info;
-        if (info->Current->CRC != target_crc) continue;
-
-        void*    blackboard = gm_blackboard(gm);
-        uint32_t map_width  = info->Width;
-        for (uint32_t x = 0; x < 30; x++) {
-            for (uint32_t y = 0; y < 30; y++) {
-                MapCellStruct* cell = map_coordinates(&scenario->Coords, (int)y * (int)map_width + (int)x);
-                if (!cell) break;
-                mark_cell(cell, 1, scenario);
-                render_cell_bg(cell, scenario, 1);
-                serialize_cells(scenario, blackboard);
-            }
-        }
-        return;
-    }
+    MapCellStruct* cell = map_coordinates(&scenario->Coords,
+                              (int)tp->cellY * (int)scenario->Info->Width + (int)tp->cellX);
+    if (!cell) return;
+    void* blackboard = gm_blackboard(gm);
+    mark_cell(cell, 1, scenario);
+    render_cell_bg(cell, scenario, 1);
+    serialize_cells(scenario, blackboard);
 }
 
 /* --------------------------------------------------------------------------

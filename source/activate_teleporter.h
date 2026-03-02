@@ -1,11 +1,6 @@
 #ifndef ACTIVATE_TELEPORTER_H
 #define ACTIVATE_TELEPORTER_H
 
-/*
- * activate_teleporter.h — Metroid: Samus Returns (3DS) ExeFS.elf
- * Game struct layouts, function pointer types, and resolved VAs (Ghidra ARM32).
- */
-#pragma once
 #include <stdint.h>
 
 /* ---- Forward declarations ------------------------------------------------ */

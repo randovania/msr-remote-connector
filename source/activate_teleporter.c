@@ -2,7 +2,7 @@
 #include <string.h>
 
 /*  Teleporter lookup table (name → area, minimap cell coordinates). */
-/** 
+/**
 * TODO: Wrong coordinates for teleporters in sub areas. They are definetly part of the minimap you get by using
 * the section string but they have an offset to the main area and I cannot find the source. Maybe just brute force the
 * the few subareas to determine the offset.
@@ -15,7 +15,7 @@
 * RandoApi.ActivateTeleporter("LE_Teleporter_05_01")
 * RandoApi.ActivateTeleporter("LE_Teleporter_06C_001")
 * RandoApi.ActivateTeleporter("LE_Teleporter_06B_001")
-*/ 
+*/
 
 static const TeleporterEntry TELEPORTER_TABLE[] = {
     { "LE_Teleporter_00_01",   "s000_surface",  65, 7 },
@@ -77,18 +77,8 @@ static const AreaSectionEntry AREA_SECTION_TABLE[] = {
 /* --------------------------------------------------------------------------
  * Register teleporter in the blackboard.
  * Mirrors one FUN_006a5358 call from ScanVisitDiscoverEverything.
- * Returns 1 on success, 0 if teleporter_name is not in the table.
  * -------------------------------------------------------------------------- */
-int activate_teleporter_blackboard(const char* teleporter_name) {
-    const char* area_name = NULL;
-    for (int i = 0; i < TELEPORTER_COUNT; i++) {
-        if (strcmp(TELEPORTER_TABLE[i].teleporter, teleporter_name) == 0) {
-            area_name = TELEPORTER_TABLE[i].area;
-            break;
-        }
-    }
-    if (!area_name) return 0;
-
+static void activate_teleporter_blackboard(const char* teleporter_name, const char* area_name) {
     GameManager* gm  = *GAMEMANAGER_PPTR;
     void* blackboard = gm_blackboard(gm);
 
@@ -102,7 +92,6 @@ int activate_teleporter_blackboard(const char* teleporter_name) {
     register_teleporter(blackboard, &tp_locs_crc, &tp_str, &area_str);
     trash_tstring(&tp_str);
     trash_tstring(&area_str);
-    return 1;
 }
 
 /* --------------------------------------------------------------------------
@@ -110,7 +99,7 @@ int activate_teleporter_blackboard(const char* teleporter_name) {
  * Mirrors the entity-walk loop from ScanVisitDiscoverEverything.
  * Only affects teleporters whose area is currently loaded.
  * -------------------------------------------------------------------------- */
-void activate_teleporter_entities(void) {
+static void activate_teleporter_entities(void) {
     GameManager* gm    = *GAMEMANAGER_PPTR;
     void**  entities   = gm_entity_list(gm);
     uint32_t count     = gm_entity_count(gm);
@@ -126,26 +115,16 @@ void activate_teleporter_entities(void) {
 }
 
 /* --------------------------------------------------------------------------
- * Set the "{primaryArea}_discovered" blackboard flag for the given sub-area.
+ * Set the "{primaryArea}_discovered" blackboard flag.
  * Mirrors the tail of FUN_004e6de4.
  * Equivalent Lua: Blackboard.SetProp(sectionStr, primaryArea.."_discovered", "b", true)
  * -------------------------------------------------------------------------- */
-void mark_area_discovered(const char* sub_area_name) {
-    const AreaSectionEntry* entry = NULL;
-    for (int i = 0; i < AREA_SECTION_COUNT; i++) {
-        if (strcmp(AREA_SECTION_TABLE[i].subArea, sub_area_name) == 0) {
-            entry = &AREA_SECTION_TABLE[i];
-            break;
-        }
-    }
-    if (!entry) return;
-
+static void mark_area_discovered(const AreaSectionEntry* area_section, uint32_t section_crc) {
     char flag_name[64];
-    strcpy(flag_name, entry->primaryArea);
+    strcpy(flag_name, area_section->primary_area);
     strcat(flag_name, "_discovered");
 
-    void*    flag_str    = NULL;
-    uint32_t section_crc = crc32(entry->sectionStr, (int)strlen(entry->sectionStr), 0xFFFFFFFF);
+    void* flag_str = NULL;
     hash_string(&flag_str, flag_name);
 
     char value = '\x01';
@@ -168,35 +147,17 @@ static CMinimapScenario* find_scenario(CMinimap* minimap, uint32_t section_crc) 
 }
 
 /* --------------------------------------------------------------------------
- * Mark the specific teleporter's minimap cell
+ * Mark the specific teleporter's minimap cell.
  *
  * Walks the loaded MinimapScenarioWrapper chain, matches the scenario by CRC,
  * then calls mark_cell + render_cell_bg + serialize_cells for cell (cellX, cellY).
- * cellX/cellY must be filled in TELEPORTER_TABLE
+ * cellX/cellY must be filled in TELEPORTER_TABLE.
  * -------------------------------------------------------------------------- */
-void mark_teleporter_cell(const char* teleporter_name) {
-    const TeleporterEntry* tp = NULL;
-    for (int i = 0; i < TELEPORTER_COUNT; i++) {
-        if (strcmp(TELEPORTER_TABLE[i].teleporter, teleporter_name) == 0) {
-            tp = &TELEPORTER_TABLE[i];
-            break;
-        }
-    }
-
-    const AreaSectionEntry* sec = NULL;
-    for (int i = 0; i < AREA_SECTION_COUNT; i++) {
-        if (strcmp(AREA_SECTION_TABLE[i].subArea, tp->area) == 0) {
-            sec = &AREA_SECTION_TABLE[i];
-            break;
-        }
-    }
-    if (!sec) return;
-
+static void mark_teleporter_cell(const TeleporterEntry* tp, uint32_t section_crc) {
     GameManager* gm      = *GAMEMANAGER_PPTR;
     CMinimap*    minimap = get_minimap(gm);
     if (!minimap) return;
 
-    uint32_t section_crc = crc32(sec->sectionStr, (int)strlen(sec->sectionStr), 0xFFFFFFFF);
     CMinimapScenario* scenario = find_scenario(minimap, section_crc);
     if (!scenario) return;
 
@@ -214,16 +175,29 @@ void mark_teleporter_cell(const char* teleporter_name) {
  * Usage: activate_teleporter("LE_Teleporter_03A_001");
  * -------------------------------------------------------------------------- */
 int activate_teleporter(const char* teleporter_name) {
-    int ok = activate_teleporter_blackboard(teleporter_name);
-    if (ok) {
-        activate_teleporter_entities();
-        for (int i = 0; i < TELEPORTER_COUNT; i++) {
-            if (strcmp(TELEPORTER_TABLE[i].teleporter, teleporter_name) == 0) {
-                mark_area_discovered(TELEPORTER_TABLE[i].area);
-                break;
-            }
+    const TeleporterEntry* tp = NULL;
+    for (int i = 0; i < TELEPORTER_COUNT; i++) {
+        if (strcmp(TELEPORTER_TABLE[i].teleporter, teleporter_name) == 0) {
+            tp = &TELEPORTER_TABLE[i];
+            break;
         }
-        mark_teleporter_cell(teleporter_name);
     }
-    return ok;
+    if (!tp) return 0;
+
+    const AreaSectionEntry* area_section = NULL;
+    for (int i = 0; i < AREA_SECTION_COUNT; i++) {
+        if (strcmp(AREA_SECTION_TABLE[i].sub_area, tp->area) == 0) {
+            area_section = &AREA_SECTION_TABLE[i];
+            break;
+        }
+    }
+    if (!area_section) return 0;
+
+    uint32_t section_crc = crc32(area_section->section_str, (int)strlen(area_section->section_str), 0xFFFFFFFF);
+
+    activate_teleporter_blackboard(teleporter_name, tp->area);
+    activate_teleporter_entities();
+    mark_area_discovered(area_section, section_crc);
+    mark_teleporter_cell(tp, section_crc);
+    return 1;
 }

@@ -73,12 +73,10 @@ typedef void*          (*ref_to_teleporter_class_fn) (void);
 typedef int            (*compare_object_to_class_fn) (void* obj, void* classRef);
 typedef uint32_t       (*crc32_fn)                  (const char* str, int len, uint32_t init);
 typedef void           (*set_blackboard_flag_fn)    (void* section, uint32_t* sectionCRC, void** flagName, char* value);
-typedef void           (*discover_scenario_fn)      (CMinimapScenario* scenario);
 typedef CMinimap*      (*get_minimap_fn)            (GameManager* gm);
 typedef void           (*mark_cell_fn)              (MapCellStruct* cell, int createVisual, CMinimapScenario* scenario);
 typedef void           (*serialize_cells_fn)        (CMinimapScenario* scenario, void* blackboard);
 typedef void*          (*render_cell_bg_fn)         (MapCellStruct* cell, CMinimapScenario* scenario, int flag);
-typedef void           (*spawn_cell_icon_fn)        (CMinimapScenario* scenario, MapCellStruct* cell, void* blackboard);
 typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, int index);
 
 /* ---- Resolved function pointers (Ghidra VAs) ----------------------------- */
@@ -98,8 +96,6 @@ typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, 
 #define crc32                    ((crc32_fn)                    0x001d0248)
 /* FUN_001db19c — SetBlackboardFlag: write UInt8 (bool) to blackboard key     */
 #define set_blackboard_flag      ((set_blackboard_flag_fn)      0x001db19c)
-/* FUN_004e6de4 — mark all cells in scenario as visited, set _discovered flag */
-#define discover_scenario        ((discover_scenario_fn)        0x004e6de4)
 /* FUN_001ae614 — GameManager → CIngameMenu → CMinimap (two Y_ dereferences) */
 #define get_minimap              ((get_minimap_fn)              0x001ae614)
 /* FUN_004a355c — set cell Enum=2 or 3; spawns visual if createVisual=1       */
@@ -108,8 +104,6 @@ typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, 
 #define serialize_cells          ((serialize_cells_fn)          0x0018d56c)
 /* FUN_001af310 — render tile background color (must call after mark_cell)    */
 #define render_cell_bg           ((render_cell_bg_fn)           0x001af310)
-/* FUN_001f5aec — spawn content icon; for teleporters: "teleporter" or "teleporteroff" */
-#define spawn_cell_icon          ((spawn_cell_icon_fn)          0x001f5aec)
 /* FUN_001edf40 — MapCoordinatesFunction_: cell at linear index (y*w+x)       */
 #define map_coordinates          ((map_coordinates_fn)          0x001edf40)
 
@@ -131,9 +125,9 @@ typedef struct {
 } TeleporterEntry;
 
 typedef struct {
-    const char* subArea;
-    const char* primaryArea;
-    const char* sectionStr;  /* pipe-separated sub-areas; CRC32'd as blackboard section key */
+    const char* sub_area;
+    const char* primary_area;
+    const char* section_str;  /* pipe-separated sub-areas; CRC32'd as blackboard section key */
 } AreaSectionEntry;
 
 /* ---- Public API ---------------------------------------------------------- */

@@ -2,39 +2,25 @@
 #include <string.h>
 
 /*  Teleporter lookup table (name → area, minimap cell coordinates). */
-/**
-* TODO: Wrong coordinates for teleporters in sub areas. They are definetly part of the minimap you get by using
-* the section string but they have an offset to the main area and I cannot find the source. Maybe just brute force the
-* the few subareas to determine the offset.
-* Coordinates are taken from the Bmsmsd
-* RandoApi.ActivateTeleporter("LE_Teleporter_02_01")
-* RandoApi.ActivateTeleporter("LE_Teleporter_02_04")
-* RandoApi.ActivateTeleporter("LE_Teleporter_03_01")
-* RandoApi.ActivateTeleporter("LE_Teleporter_03B_001")
-* RandoApi.ActivateTeleporter("LE_Teleporter_03B_002")
-* RandoApi.ActivateTeleporter("LE_Teleporter_05_01")
-* RandoApi.ActivateTeleporter("LE_Teleporter_06C_001")
-* RandoApi.ActivateTeleporter("LE_Teleporter_06B_001")
-*/
 
 static const TeleporterEntry TELEPORTER_TABLE[] = {
     { "LE_Teleporter_00_01",   "s000_surface",  65, 7 },
     { "LE_Teleporter_00b_01",  "s000_surface",  23, 23 },
     { "LE_Teleporter_01_01",   "s010_area1",    38, 17 },
-    { "LE_Teleporter_02_01",   "s028_area2c",   18,  11 },
+    { "LE_Teleporter_02_01",   "s028_area2c",   18 + 38,  11 + 1},
     { "LE_Teleporter_02_02",   "s020_area2",    25,  20 },
     { "LE_Teleporter_02_03",   "s020_area2",    19,   7 },
-    { "LE_Teleporter_02_04",   "s025_area2b",   24,  10 },
+    { "LE_Teleporter_02_04",   "s025_area2b",   24 + 16,  10 + 3},
     { "LE_Teleporter_03A_001", "s030_area3",    29,  38 },
     { "LE_Teleporter_03A_002", "s030_area3",    49,  36 },
-    { "LE_Teleporter_03_01",   "s036_area3c",   12,  32 },
-    { "LE_Teleporter_03B_001", "s033_area3b",   16,  44 },
-    { "LE_Teleporter_03B_002", "s033_area3b",   26,  35 },
+    { "LE_Teleporter_03_01",   "s036_area3c",   12 + 28,  32 + 4},
+    { "LE_Teleporter_03B_001", "s033_area3b",   16 + 10,  44 - 21},
+    { "LE_Teleporter_03B_002", "s033_area3b",   26 + 10,  35 - 21},
     { "LE_Teleporter_04_01",   "s040_area4",    19,  12 },
-    { "LE_Teleporter_05_01",   "s050_area5",    18,  10 },
+    { "LE_Teleporter_05_01",   "s050_area5",    18 + 25,  10 + 7},
     { "LE_Teleporter_06A_001", "s060_area6",    46,  12 },
-    { "LE_Teleporter_06C_001", "s067_area6c",   32,  10 },
-    { "LE_Teleporter_06B_001", "s065_area6b",   11,  17 },
+    { "LE_Teleporter_06C_001", "s067_area6c",   32 - 3,  10 + 18},
+    { "LE_Teleporter_06B_001", "s065_area6b",   11 + 12,  17 + 25},
     { "LE_Teleporter_06A_002", "s060_area6",    23,  18 },
     { "LE_Teleporter_07_01",   "s070_area7",    25,   7 },
     { "LE_Teleporter_07_02",   "s070_area7",    23,  20 },
@@ -51,8 +37,6 @@ static const TeleporterEntry TELEPORTER_TABLE[] = {
  * sectionStr  = pipe-separated sub-areas sharing a blackboard section;
  *               CRC32(str, len, 0xFFFFFFFF) is the section key.
  * primaryArea = first sub-area; flag name = primaryArea + "_discovered".
- *
- * Area 2 confirmed (Lua: Blackboard.SetProp). Others inferred from naming.
  * -------------------------------------------------------------------------- */
 static const AreaSectionEntry AREA_SECTION_TABLE[] = {
     { "s000_surface",  "s000_surface",  "s000_surface"                        },
@@ -150,7 +134,7 @@ static CMinimapScenario* find_scenario(CMinimap* minimap, uint32_t section_crc) 
  * Mark the specific teleporter's minimap cell.
  *
  * Walks the loaded MinimapScenarioWrapper chain, matches the scenario by CRC,
- * then calls mark_cell + render_cell_bg + serialize_cells for cell (cellX, cellY).
+ * then calls mark_cell + render_cell_bg for cell (cellX, cellY).
  * cellX/cellY must be filled in TELEPORTER_TABLE.
  * -------------------------------------------------------------------------- */
 static void mark_teleporter_cell(const TeleporterEntry* tp, uint32_t section_crc) {
@@ -167,7 +151,6 @@ static void mark_teleporter_cell(const TeleporterEntry* tp, uint32_t section_crc
     void* blackboard = gm_blackboard(gm);
     mark_cell(cell, 1, scenario);
     render_cell_bg(cell, scenario, 1);
-    serialize_cells(scenario, blackboard);
 }
 
 /* --------------------------------------------------------------------------

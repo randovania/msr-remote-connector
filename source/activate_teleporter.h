@@ -75,7 +75,6 @@ typedef uint32_t       (*crc32_fn)                  (const char* str, int len, u
 typedef void           (*set_blackboard_flag_fn)    (void* section, uint32_t* sectionCRC, void** flagName, char* value);
 typedef CMinimap*      (*get_minimap_fn)            (GameManager* gm);
 typedef void           (*mark_cell_fn)              (MapCellStruct* cell, int createVisual, CMinimapScenario* scenario);
-typedef void           (*serialize_cells_fn)        (CMinimapScenario* scenario, void* blackboard);
 typedef void*          (*render_cell_bg_fn)         (MapCellStruct* cell, CMinimapScenario* scenario, int flag);
 typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, int index);
 
@@ -100,8 +99,6 @@ typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, 
 #define get_minimap              ((get_minimap_fn)              0x001ae614)
 /* FUN_004a355c — set cell Enum=2 or 3; spawns visual if createVisual=1       */
 #define mark_cell                ((mark_cell_fn)                0x004a355c)
-/* FUN_0018d56c — flush cell enum array and marker grid to blackboard         */
-#define serialize_cells          ((serialize_cells_fn)          0x0018d56c)
 /* FUN_001af310 — render tile background color (must call after mark_cell)    */
 #define render_cell_bg           ((render_cell_bg_fn)           0x001af310)
 /* FUN_001edf40 — MapCoordinatesFunction_: cell at linear index (y*w+x)       */

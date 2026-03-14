@@ -139,3 +139,8 @@ SkipTeleporterRegistration_Area10_10_02:
     addr: 0x00241820
     data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s100_area10 / LE_Teleporter_10_02)
 
+SerializeCells:
+    type: branch
+    link: false
+    addr: 0x0024249c
+    func: SerializeAsm

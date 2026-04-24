@@ -1,0 +1,146 @@
+SetMapCellDiscovered_NoSubstruct:
+    type: patch
+    addr: 0x004a3564
+    data: 0x0210a003     # mov r1, #0x2
+
+SetMapCellDiscovered_HasSubstruct:
+    type: patch
+    addr: 0x004a3570
+    data: 0x0230A0E3     # mov r3, #0x2
+
+
+# ---------------------------------------------------------------------------
+# Skip FUN_006a5358 calls — prevent teleporter blackboard registration
+# NOP (E320F000) replaces each BL FUN_006a5358 in ScanVisitDiscoverEverything
+# ---------------------------------------------------------------------------
+
+SkipTeleporterActivation:
+    type: patch
+    addr: 0x00241890
+    data: 0x00f020e3
+
+SkipTeleporterRegistration_Surface_00_01:
+    type: patch
+    addr: 0x00240fb4
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s000_surface / LE_Teleporter_00_01)
+
+SkipTeleporterRegistration_Surface_00b_01:
+    type: patch
+    addr: 0x00241004
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s000_surface / LE_Teleporter_00b_01)
+
+SkipTeleporterRegistration_Area1_01_01:
+    type: patch
+    addr: 0x00241050
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s010_area1 / LE_Teleporter_01_01)
+
+SkipTeleporterRegistration_Area2c_02_01:
+    type: patch
+    addr: 0x0024109c
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s028_area2c / LE_Teleporter_02_01)
+
+SkipTeleporterRegistration_Area2_02_02:
+    type: patch
+    addr: 0x002410e8
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s020_area2 / LE_Teleporter_02_02)
+
+SkipTeleporterRegistration_Area2_02_03:
+    type: patch
+    addr: 0x00241134
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s020_area2 / LE_Teleporter_02_03)
+
+SkipTeleporterRegistration_Area2b_02_04:
+    type: patch
+    addr: 0x00241180
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s025_area2b / LE_Teleporter_02_04)
+
+SkipTeleporterRegistration_Area3_03A_001:
+    type: patch
+    addr: 0x002411cc
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s030_area3 / LE_Teleporter_03A_001)
+
+SkipTeleporterRegistration_Area3_03A_002:
+    type: patch
+    addr: 0x00241218
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s030_area3 / LE_Teleporter_03A_002)
+
+SkipTeleporterRegistration_Area3c_03_01:
+    type: patch
+    addr: 0x00241264
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s036_area3c / LE_Teleporter_03_01)
+
+SkipTeleporterRegistration_Area3b_03B_001:
+    type: patch
+    addr: 0x002412b0
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s033_area3b / LE_Teleporter_03B_001)
+
+SkipTeleporterRegistration_Area3b_03B_002:
+    type: patch
+    addr: 0x002412fc
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s033_area3b / LE_Teleporter_03B_002)
+
+SkipTeleporterRegistration_Area4_04_01:
+    type: patch
+    addr: 0x002414dc
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s040_area4 / LE_Teleporter_04_01)
+
+SkipTeleporterRegistration_Area5_05_01:
+    type: patch
+    addr: 0x00241528
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s050_area5 / LE_Teleporter_05_01)
+
+SkipTeleporterRegistration_Area6_06A_001:
+    type: patch
+    addr: 0x00241574
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s060_area6 / LE_Teleporter_06A_001)
+
+SkipTeleporterRegistration_Area6c_06C_001:
+    type: patch
+    addr: 0x002415c0
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s067_area6c / LE_Teleporter_06C_001)
+
+SkipTeleporterRegistration_Area6b_06B_001:
+    type: patch
+    addr: 0x0024160c
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s065_area6b / LE_Teleporter_06B_001)
+
+SkipTeleporterRegistration_Area6_06A_002:
+    type: patch
+    addr: 0x00241658
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s060_area6 / LE_Teleporter_06A_002)
+
+SkipTeleporterRegistration_Area7_07_01:
+    type: patch
+    addr: 0x002416a4
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s070_area7 / LE_Teleporter_07_01)
+
+SkipTeleporterRegistration_Area7_07_02:
+    type: patch
+    addr: 0x002416f0
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s070_area7 / LE_Teleporter_07_02)
+
+SkipTeleporterRegistration_Area9_09_01:
+    type: patch
+    addr: 0x0024173c
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s090_area9 / LE_Teleporter_09_01)
+
+SkipTeleporterRegistration_Area9_09_02:
+    type: patch
+    addr: 0x00241788
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s090_area9 / LE_Teleporter_09_02)
+
+SkipTeleporterRegistration_Area10_10_01:
+    type: patch
+    addr: 0x002417d4
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s100_area10 / LE_Teleporter_10_01)
+
+SkipTeleporterRegistration_Area10_10_02:
+    type: patch
+    addr: 0x00241820
+    data: 0x00f020e3     # NOP (was: BL FUN_006a5358 — s100_area10 / LE_Teleporter_10_02)
+
+SerializeCells:
+    type: branch
+    link: false
+    addr: 0x0024249c
+    func: SerializeAsm

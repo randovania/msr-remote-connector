@@ -1,0 +1,6 @@
+SkipOpening:
+    type:   branch              # branch
+    link:   false               # branch with a b instruction
+    addr:   0x004ca968          # overwrite the start of the function
+    func:   SkipOpeningAsm      # jump to our SkipOpeningAsm    
+

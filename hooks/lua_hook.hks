@@ -2,4 +2,4 @@ LuaHook:
     type:   softbranch
     link:   false
     addr:   0x002231a8
-    func:   lua_hook(void*)
+    func:   lua_hook

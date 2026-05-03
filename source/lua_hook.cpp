@@ -166,7 +166,7 @@ int is_connected(void* lua_state) {
 
 
 /* The lua hook functions used by the hks file */
-void lua_hook(void* lua_state) {
+extern "C" void lua_hook(void* lua_state) {
     luaL_register(lua_state, "RL", multiworld_lib);
 
     lua_pushinteger(lua_state, 1);

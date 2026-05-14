@@ -15,3 +15,15 @@ GravitySuitHook:
     link:   true                # branch with a bl instruction
     addr:   0x00384d3c          # overwrite instruction tst param1,0x2240000
     func:   GravitySuitAsm      # jump to our GravitySuitAsm     
+
+SpazerShootThroughBlocksHook:
+    type:   branch              # branch
+    link:   true                # branch with a bl instruction
+    addr:   0x002cf088          
+    func:   SpazerShootThroughBlocksAsm  
+
+PlasmaShootThroughBlocksHook:
+    type:   branch              # branch
+    link:   true                # branch with a bl instruction
+    addr:   0x002c3fcc          
+    func:   PlasmaShootThroughBlocksAsm  

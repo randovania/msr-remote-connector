@@ -6,8 +6,11 @@
 #define LAVA 0x200000
 #define FLEECH_SWARM 0x2000000
 
+// defaults don't matter because we immediately call the functions which sets these values after a scenario load
 int has_spazer = 0x1;
+int has_wave = 0x1;
 int gravity_suit_damage_flags = FLEECH_SWARM | LAVA | HEAT;
+
 int skip_opening = 0;
 
 int change_suit_values(void* lua_state) {
@@ -36,7 +39,7 @@ int change_beams(void* lua_state) {
     float* plasmaDmg = (float*) 0x0078ff28;
 
     // parse the 7 parameters to the lua function
-    int has_wave = lua_toboolean(lua_state, 1);
+    has_wave = lua_toboolean(lua_state, 1);
     has_spazer = lua_toboolean(lua_state, 2);
     int has_plasma = lua_toboolean(lua_state, 3);
     float dmgSpazer = lua_tonumber(lua_state, 4);

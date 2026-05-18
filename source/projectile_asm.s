@@ -16,9 +16,9 @@ SpazerShootThroughBlocksAsm:
     bx lr                   /* jump back because it is compared against r0 in vanilla code */
 
 PlasmaShootThroughBlocksAsm:
-    push {r0}               /* save r0 /*
+    push {r0}               /* save r0 */
     ldr r0, =has_wave       /* load address of has_wave */
     ldr r0, [r0]            /* load value of has_wave */
     strb r0,[r4,#0xb8]      /* vanilla code writes the flag to this offset */
-    pop {r0}                /* restore r0 /*
+    pop {r0}                /* restore r0 */
     bx lr                   /* jump back */

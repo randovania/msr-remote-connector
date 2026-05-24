@@ -1,0 +1,11 @@
+FusionModelsFirstHook:
+    type: branch
+    link: true
+    addr: 0x00404080
+    func: FusionModelsFirstHookAsm
+
+FusionModelsSecondHook:
+    type: branch
+    link: true
+    addr: 0x00143ef8
+    func: FusionModelsSecondHookAsm

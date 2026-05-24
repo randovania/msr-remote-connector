@@ -4,7 +4,7 @@
 SkipOpeningAsm:
     push  {r0, r1, r2, r3, r7, lr}       /* lr holds caller's return address */
     ldr   r7, =skip_opening              /* load address */
-    ldr   r7, [r7]                       /* load value  */
+    ldrb   r7, [r7]                      /* load value  */
     cmp   r7, #0
     beq   .LAB_RETURN                      
     pop   {r0, r1, r2, r3, r7, lr}       /* restore */

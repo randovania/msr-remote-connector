@@ -11,7 +11,8 @@ int has_spazer = 0x1;
 int has_wave = 0x1;
 int gravity_suit_damage_flags = FLEECH_SWARM | LAVA | HEAT;
 
-int skip_opening = 0;
+uint8_t skip_opening = 0;
+uint8_t use_fusion_models = 0;
 
 int change_suit_values(void* lua_state) {
     int has_varia = lua_toboolean(lua_state, 1);
@@ -81,8 +82,12 @@ int activate_teleporter_lua_wrapper(void* lua_state) {
     return 0;
 }
 
-int save_skip_state(void* lua_state) {
+/**
+ * Function used as bridge to make the patcher options available in the c and asm code
+ */
+int save_patcher_options(void* lua_state) {
     skip_opening = lua_toboolean(lua_state, 1);
+    use_fusion_models = lua_toboolean(lua_state, 2);
     return 0;
 }
 
@@ -92,7 +97,7 @@ const luaL_Reg rando_api_lib[] = {
     {"ChangeSuitValues", change_suit_values}, 
     // ChangeBeams(hasWave, hasSpazer, hasPlasma, dmgSpazer, dmgPlasma, dmgPlasmaWave, dmgPlasmaSpazer)
     {"ChangeBeams", change_beams}, 
-    {"SaveSkipState", save_skip_state}, 
+    {"SavePatcherOptions", save_patcher_options}, 
     {"ActivateTeleporter", activate_teleporter_lua_wrapper}, 
     {NULL, NULL}  
 };

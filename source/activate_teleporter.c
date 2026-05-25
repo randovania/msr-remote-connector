@@ -148,7 +148,6 @@ static void mark_teleporter_cell(const TeleporterEntry* tp, uint32_t section_crc
     MapCellStruct* cell = map_coordinates(&scenario->Coords,
                               (int)tp->cellY * (int)scenario->Info->Width + (int)tp->cellX);
     if (!cell) return;
-    void* blackboard = gm_blackboard(gm);
     mark_cell(cell, 1, scenario);
     render_cell_bg(cell, scenario, 1);
 }

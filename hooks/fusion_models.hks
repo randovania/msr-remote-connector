@@ -1,0 +1,16 @@
+# hook function which checks for fusion mode and then loads the fusion or default bcmdl files
+# part of the "CSamusModelUpdaterComponent"
+FusionModelsFirstHook:
+    type: branch
+    link: true
+    addr: 0x00404080                    # override loading the flag from the game manager
+    func: FusionModelsFirstHookAsm
+
+# hook function which checks for fusion mode and then loads fusion models pkgs and unloads the default models pkgs
+# or unloads fusion models pkgs and loads default models pkgs
+# part of starting a game / loading a save slot from main menu
+FusionModelsSecondHook:
+    type: branch
+    link: true
+    addr: 0x00143ef8                    # override loading the flag from the game manager
+    func: FusionModelsSecondHookAsm

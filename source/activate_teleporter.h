@@ -60,15 +60,8 @@ typedef struct {                                  /* Discovered at +0x204       
 
 typedef struct GameManager GameManager;           /* Opaque — access via helpers below                  */
 
-static inline void*    gm_blackboard  (GameManager* gm) { return (void*)((uintptr_t)gm + 0x4a8); }
-static inline void**   gm_entity_list (GameManager* gm) { return *(void***)((uintptr_t)gm + 0x18); }
-static inline uint32_t gm_entity_count(GameManager* gm) { return (*(uint32_t*)((uintptr_t)gm + 0x20)) & 0x3FFFFFFF; }
-
-/* ---- Function pointer types (AAPCS / ARM32) ------------------------------ */
-typedef void           (*hash_string_fn)            (void** result, const char* text);
-typedef void           (*trash_tstring_fn)          (void** str);
+// ---- Function pointer types (AAPCS / ARM32) ------------------------------
 typedef void           (*register_teleporter_fn)    (void* blackboard, uint32_t* crc, void** tp, void** area);
-typedef void*          (*get_component_for_entity_fn)(void* entity, void** componentType);
 typedef void*          (*ref_to_teleporter_class_fn) (void);
 typedef int            (*compare_object_to_class_fn) (void* obj, void* classRef);
 typedef uint32_t       (*crc32_fn)                  (const char* str, int len, uint32_t init);
@@ -79,14 +72,8 @@ typedef void*          (*render_cell_bg_fn)         (MapCellStruct* cell, CMinim
 typedef MapCellStruct* (*map_coordinates_fn)        (CoordinatesStruct* coords, int index);
 
 /* ---- Resolved function pointers (Ghidra VAs) ----------------------------- */
-/* FUN_001b2d94 — HashString: intern string in ref-counted pool              */
-#define hash_string              ((hash_string_fn)             0x001b2d94)
-/* FUN_001b3180 — TrashTStringInstancePlus___: decrement refcount, free if 0 */
-#define trash_tstring            ((trash_tstring_fn)           0x001b3180)
 /* FUN_006a5358 — write teleporter+area into blackboard "teleport_locations"  */
 #define register_teleporter      ((register_teleporter_fn)     0x006a5358)
-/* FUN_001e9878 — GetComponentForEntity_: find component by type string       */
-#define get_component_for_entity ((get_component_for_entity_fn)0x001e9878)
 /* FUN_00125dec — RefToCTeleporterUsableComponent: returns vtable class ref   */
 #define ref_to_teleporter_class  ((ref_to_teleporter_class_fn) 0x00125dec)
 /* FUN_001eb828 — CompareObjectToClass_: runtime vtable type check            */

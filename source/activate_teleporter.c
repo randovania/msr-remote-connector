@@ -1,4 +1,5 @@
 #include "activate_teleporter.h"
+#include "game_manager.h"
 #include <string.h>
 
 /*  Teleporter lookup table (name → area, minimap cell coordinates). */
@@ -83,7 +84,7 @@ static void activate_teleporter_blackboard(const char* teleporter_name, const ch
  * Mirrors the entity-walk loop from ScanVisitDiscoverEverything.
  * Only affects teleporters whose area is currently loaded.
  * -------------------------------------------------------------------------- */
-static void activate_teleporter_entities(void) {
+static void activate_teleporter_entities() {
     GameManager* gm    = *GAMEMANAGER_PPTR;
     void**  entities   = gm_entity_list(gm);
     uint32_t count     = gm_entity_count(gm);

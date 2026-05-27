@@ -1,7 +1,7 @@
 .text
 .align 4
 
-/**
+/*
  * Loads the "use_fusion_models" byte from c code and compares.
  * equal = fusion models are active
  * not equal = fusion models are inactive

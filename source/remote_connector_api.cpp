@@ -43,7 +43,7 @@ void sleep_ten_seconds() {
     svcSleepThread(1000 * 1000 * 1000 * 2);
 }
 
-/**
+/*
  * Inits the server by using socInit and creates server socket by using standard Berkeley socket api calls 
  * Was changed to busy wait error handling until it works (to not crash on Luma with disabled WiFi)
  */

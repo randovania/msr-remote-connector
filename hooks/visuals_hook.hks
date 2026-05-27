@@ -1,0 +1,12 @@
+SpazerVisualsHook:
+    type:   branch
+    addr:   0x002CEF6C
+    link:   true
+    func:   SpazerVisualsAsm
+
+// hooks into the function which sets the charge glow color
+SpazerChargeHook:
+    type: branch
+    link: true
+    addr: 0x002cd804
+    func: SpazerGlowConditionalHookAsm

@@ -1,0 +1,7 @@
+# Make randomizer grapple-doors auto-switch to the Grapple Beam in 360 free-aim,
+# like vanilla grapple points. Hook inside the CAimComponent auto-aim update
+GrappleDoorAutoSwitchHook:
+    type: branch
+    link: true
+    addr: 0x0029fc40                    # the nop between `cmp r0,#0` and `beq 0x0029fd68`
+    func: GrappleDoorAutoSwitchAsm

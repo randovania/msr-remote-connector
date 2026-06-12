@@ -1,0 +1,8 @@
+# hook function at CDoorLifeComponent which checks for damage.
+# the custom check is added right before "beq LAB_0032f64c"
+# which is the "reject hit" path
+ChargeDoorImmuneToBurstHook:
+    type:   branch
+    link:   true
+    addr:   0x0032f628
+    func:   ChargeDoorImmuneToBurstAsm

@@ -13,6 +13,7 @@ int gravity_suit_damage_flags = FLEECH_SWARM | LAVA | HEAT;
 
 uint8_t skip_opening = 0;
 uint8_t use_fusion_models = 0;
+uint8_t charge_door_burst_buff = 0;
 
 int change_suit_values(void* lua_state) {
     int has_varia = lua_toboolean(lua_state, 1);
@@ -88,6 +89,7 @@ int activate_teleporter_lua_wrapper(void* lua_state) {
 int save_patcher_options(void* lua_state) {
     skip_opening = lua_toboolean(lua_state, 1);
     use_fusion_models = lua_toboolean(lua_state, 2);
+    charge_door_burst_buff = lua_toboolean(lua_state, 3);
     return 0;
 }
 

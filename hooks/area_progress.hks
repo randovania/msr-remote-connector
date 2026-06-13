@@ -1,0 +1,17 @@
+# Redirect the minimap per-area item-% DENOMINATOR from the hardcoded inline
+# constant to GAME_PROGRESS.<MapName>_PROGRESS
+# We hook on the `vmov s0,r4` that consumes the denominator (after the original constant chain)
+
+# Copy A — "current area" (mode != 0): the `vmov s0,r4`.
+AreaDenomHookA:
+    type: branch
+    link: false
+    addr: 0x00486248
+    func: AreaDenomTrampA
+
+# Copy B — "selected area" (mode == 0): the `vmov s0,r4`.
+AreaDenomHookB:
+    type: branch
+    link: false
+    addr: 0x004865e0
+    func: AreaDenomTrampB

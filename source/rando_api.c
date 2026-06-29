@@ -40,6 +40,9 @@ int change_beams(void* lua_state) {
     float* spazerDmg = (float*) 0x00790474;
     float* plasmaDmg = (float*) 0x0078ff28;
 
+    // Beam Burst heat tunables (fFractionOfHeatAddedPerWeaponBoostBurstShot)
+    float* plasmaBurstHeat = (float*) 0x0078ff6c;
+
     // parse the 7 parameters to the lua function
     has_wave = lua_toboolean(lua_state, 1);
     has_spazer = lua_toboolean(lua_state, 2);
@@ -55,6 +58,9 @@ int change_beams(void* lua_state) {
         else if (has_spazer) *plasmaDmg = dmgPlasmaSpazer;
         else if (has_wave) *plasmaDmg = dmgPlasmaWave;
         else *plasmaDmg = dmgPlasma;
+
+        // vanilla is wave: 0.13 spazer: 0.07, plasma: 0.07
+        *plasmaBurstHeat = has_spazer ? 0.07f : 0.15f;
     } else if (has_spazer) {
         if (has_wave) *spazerDmg = 70.0;
         else *spazerDmg = dmgSpazer;

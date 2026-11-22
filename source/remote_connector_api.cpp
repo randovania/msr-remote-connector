@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <fcntl.h>
 #include <errno.h>
+#include <unistd.h>
 
 #define SOC_BUFFER_SIZE 0x30000
 
@@ -27,8 +28,6 @@ s32 client_sock = -1;
 uint8_t request_number = 0;
 
 std::atomic_bool ready_for_game_thread = { false };
-pthread_cond_t lua_done = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct ClientSubscriptions client_subs;
 
@@ -95,8 +94,6 @@ void listen_and_receive_function(void* argv) {
     sleep_ten_seconds();
 
     while (server_sock != -1) {
-        pthread_mutex_lock(&mutex);
-
         // init state
         uint8_t run_client_loop = 1;
         client_subs.logging = false;
@@ -131,13 +128,13 @@ void listen_and_receive_function(void* argv) {
             parse_client_packet(ret);
 
             while (ready_for_game_thread.load()) {
-                pthread_cond_wait(&lua_done, &mutex);
+                // 10 ms, gives core 1 back to the game's threads
+                svcSleepThread(10000 * 1000);
             }
             memset(recv_buffer, 0, SIZE_RECV_BUFFER);
         }
         close(client_sock);
         client_sock = -1;
-        pthread_mutex_unlock(&mutex);
     }
     socExit();
     srvExit();

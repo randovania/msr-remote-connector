@@ -61,7 +61,6 @@ int remote_connector_init(void* lua_state) {
 /* This functions is called perodically from the game and processes the remote lua code */
 int remote_update(void* lua_state) {
     if (ready_for_game_thread.load()) {
-        pthread_mutex_lock(&mutex);
         /* Callback is executing the recv_buffer as lua code */
         size_t result_size = 0;           // length of the lua string response (without \0)
         bool output_success = false;      // was the lua function call sucessfully
@@ -95,8 +94,6 @@ int remote_update(void* lua_state) {
         handle_remote_lua_exec(lua_result, result_size, output_success);
         lua_pop(lua_state, 1);
         ready_for_game_thread.store(false);
-        pthread_mutex_unlock(&mutex);
-        pthread_cond_signal(&lua_done);
     }
     // Register calling update again
     multiworld_schedule_update(lua_state);

@@ -1,0 +1,5 @@
+# Enlarge the GameManager pending-delete queue from 512 to 1024 nodes.
+DeleteQueueCapacity:
+    type: patch
+    addr: 0x0010e01c                    # mov r1, #0x200 (02 1c a0 e3)
+    data: 041ca0e3                      # mov r1, #0x400
